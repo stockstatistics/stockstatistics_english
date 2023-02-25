@@ -8,23 +8,25 @@ import streamlit as st
 import numpy as np
 import plotly.express as px
 st.set_page_config(layout="wide")
-st.subheader("Durchschnittliche monatliche Returns")
+st.subheader("ANALYSIS OF MONTHLY RETURNS")
 st.markdown(
-    "Auf dieser Seite können die Durchschnitts- und Medianrenditen in jedem Monat berechnet werden."
-    " Hierfür muss nur das Zeitfenster über welches die Berechnungen stattfinden sollen"
-    " und das jeweilige Aktienkürzel ausgewählt werden. Dargestellt werden die Resultate in der Tabelle sowie im Balken Diagramm.")
+    "On this page, the average and median returns can be calculated for each month. For "
+    "this purpose, only the time period over which the calculations will be performed and "
+    "the respective Yahoo Finance ticker symbol have to be selected. The results are displayed "
+    "in the table and in the bar chart. Note that the calculations are performed using the "
+    "monthly \"Open\" and \"Close\" prices provided by Yahoo Finance, and therefore accuracy cannot be guaranteed.")
 st.write("##")
 col1,a, col2 = st.columns((0.4,0.1,1.2))
 
-stock = col1.text_input("**shortcut of YahooFinance**"
-                       "(For example Apple = AAPL)", 'AAPL')
+stock = col1.text_input("**Insert any Yahoo Finance ticker symbol here:**  \n"
+                       "For example Apple = AAPL, NASDAQ = ^IXIC , S&P500 = ^GSPC", 'AAPL')
 
 st.write("##")
 
 start_date1 = dt.date(2010, 1, 1)
 end_date1 = dt.date.today()
 format = 'MMM DD, YYYY'
-slider = col2.slider('Zeitfenster für Berechnungen:',
+slider = col2.slider('Select a **time period** for the calculations:',
                       min_value=dt.date(1970, 1, 1), value=[start_date1,end_date1] ,max_value=end_date1, format=format)
 
 stock_data_m = pdr.get_data_yahoo(stock, start=slider[0], end=slider[1],interval='1mo')
@@ -53,7 +55,7 @@ month_avg = monthcalc()
 
 col11, a1,col22 = st.columns((0.4,0.1,1.2))
 col11.write("##")
-col11.markdown("**Berechnungen:**")
+col11.markdown("**Calculations:**")
 col11.dataframe(month_avg.astype(str))
 
 f = px.bar(month_avg,y=["average return in %","median return in %"], x=month_avg.index, template="none")

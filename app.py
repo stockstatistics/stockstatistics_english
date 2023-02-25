@@ -10,22 +10,21 @@ import statistics
 import numpy as np
 import plotly.express as px
 st.set_page_config(layout="wide")
-st.subheader("Statistik basierend auf Tages-returns")
+st.subheader("ANALYSIS OF DAILY RETURNS")
 st.markdown(
-    "Auf dieser Seite kann eine beliebige Aktie/Index, welche auf Yahoo Finance auffindbar ist,"
-    " auf ihr Verhalten nach einem beliebigen Tages-return untersucht werden."
-    " Zum Beispiel kann die Tesla Aktie auf ihr Verhalten nach einem Tagesreturn von etwa 6 % untersucht werden."
+    "On this page, any stock or index listed on Yahoo Finance can be examined for its behavior after "
+    "a special daily return. For example, the Tesla stock can be analyzed for its performance after daily gains of about 6 %."
     )
 
 col1,a, col2 = st.columns((0.5,0.3,1))
-stock = col1.text_input("**Hier das Kürzel von YahooFinance eingeben:**  \n"
-                        "(Zum Beispiel Tesla = TSLA)", 'TSLA')
+stock = col1.text_input("**Insert any Yahoo Finance ticker symbol here:**  \n"
+                        "Example Tesla = TSLA , NASDAQ = ^IXIC , S&P500 = ^GSPC", 'TSLA')
 st.write("##")
 
 start_date1 = dt.date(2015, 1, 1)
 end_date1 = dt.date.today()
 format = 'MMM DD, YYYY'
-slider = col2.slider('Dieser Slider ist nur für eine bessere Visualisierung der jeweiligen Aktie',
+slider = col2.slider('This slider is intended only for the visualization of the respective stock',
                       min_value=dt.date(2010, 1, 1), value=[start_date1,end_date1] ,max_value=end_date1, format=format)
 
 stock_data1 = pdr.get_data_yahoo(stock, start=slider[0], end=slider[1])
@@ -35,25 +34,25 @@ my_expander.line_chart(stock_data1,y="Adj Close")
 st.write("##")
 
 c1, c2 = st.columns((2,1))
-st.markdown("**Berechnungen:**  \n"
-            "Das Vorgehen wird am Beispiel der Tesla Aktie erläutert:  \n"
-            "Angenommen die Tesla Aktie ist Gestern um 6.4 % gestiegen. Uns interessiert nun wie sich die Aktie "
-            "im Zeitfenster vom 2020/01/10 – 2023/01/02 nach ähnlichen Tages-returns verhalten hat."
-            " Hierfür muss zuerst das entsprechende Zeitfenster ausgewählt und der \"daily percentage-range\" slider auf 6 und 7"
-            " gesetzt werden. Eine gewisse Range ist nötig, da es unwahrscheinlich ist, dass die Aktie im gewählten Zeitfenster"
-            " ebenso um genau 6.4 % gestiegen war. Bei einem zu eng gewählten Zeitfenster"
-            " oder unwahrscheinlichen Tages-renditen kann es vorkommen, dass keine Tage gefunden werden mit ähnlichen Returns"
-            " (date range too small)."
+st.markdown("**Calculations:**  \n"
+            "The methodology is best illustrated using the Tesla share as an example:  \n"
+            "Assuming that the Tesla stock increased by 6.4 % yesterday, we are curious how "
+            "the stock has performed in the time period from 2020/01/10 - 2023/01/02 after similar daily returns occurred."
+            " For this purpose we first have to select the respective \"time period\" and set "
+            "the \"daily percentage range\" slider to 6 and 7."
+            " A certain range is necessary, since it is unlikely for the stock to have risen by exactly 6.4 % "
+            "in the selected time period. If the selected time period is too narrow or the daily returns are unlikely, "
+            "it may happen that no days with similar returns are found (date range too small)."
             )
 
 c1, c2 = st.columns((1,2))
-calc_range = c1.date_input("**wähle Zeitfenster für Berechnungen:**", [dt.date(2020, 1, 10), dt.date(2023, 1, 2)])
+calc_range = c1.date_input("Select a **time period** for the calculations:", [dt.date(2020, 1, 10), dt.date(2023, 1, 2)])
 
 stock_data2 = pdr.get_data_yahoo(stock, start=calc_range[0], end=calc_range[1])
 
 low = 6
 high = 7
-slider_1 = c2.slider('Wähle die **daily percentage-range** der Aktie: ', min_value=-25, value=[low,high] ,max_value=25)
+slider_1 = c2.slider('Set the **daily percentage range** of the stock: ', min_value=-25, value=[low,high] ,max_value=25)
 
 
 def callculations (slider_1, stock_data2):
@@ -68,7 +67,8 @@ def callculations (slider_1, stock_data2):
     lag0_5 = []
     for i in range(0, len(stock_data)):
         # print(i)
-        percent = ((100 * stock_data["Adj Close"][i] / stock_data["Adj Close"][i - 1]) - 100)
+        #percent = ((100 * stock_data["Adj Close"][i] / stock_data["Adj Close"][i - 1]) - 100)
+        percent = ((100 * stock_data["Adj Close"][i] / stock_data["Open"][i]) - 100)
         # print(percent)
         # print(stock_data)
         if p1 < percent < p2:
@@ -131,87 +131,65 @@ def meanmedian (calc_data):
     return (lag1,lag2,lag3,lag5)
 
 data = meanmedian(calc_data)
-df = pd.DataFrame(data, columns=['Median Return %', 'Mean Return %','sd'], index=['nächster Tag', 'über die nächsten 2 Tage','über die nächsten 3 Tage','über die nächsten 5 Tage'])
+df = pd.DataFrame(data, columns=['Median Return %', 'Mean Return %','sd'], index=['next day', 'over the next 2 days','over the next 3 days','over the next 5 days'])
 new_df = np.round(df,1).astype(str)
 st.write("###")
 st.write("###")
 c01,a01,c02 = st.columns((1.4,0.1,1))
 
-c01.markdown("Im Tesla Beispiel hatten wir 12 Tage (Chart unten), an denen ein Tages-return zwischen 6-7 % auftrat."
-             " Nach jedem dieser Tage wird nun der Return am darauffolgenden Tag ermittelt.  "
-             "Danach wird der Mittelwert aus all diesen 12 \"nächster Tag retuns\" berechnet. Die selbe Prozedur wird"
-             " angewandt auf den Return über die nächsten 2 Tage, die nächsten 3 Tage und die nächsten 5 Tage."
-             " Im Tesla Beispiel wurde im gewählten Zeitfenster nach einem Tages-return von 6-7 % eine "
-             " Rendite von -1.2 % im Durchschnitt und 3.2 % im Median über die folgenden 5 Tage erzielt."
-             " Die Standartabweichung (sd) wird ebenfalls kalkuliert."
+c01.markdown("In the Tesla example we had 12 days (chart below) where a daily return between 6-7 % occurred. After "
+             "each of these days, the return on the following day is evaluated. Then the average of all "
+             "these 12 \"next day retuns\" is calculated. The same method is applied to the return over "
+             "the next 2 days, the next 3 days and the next 5 days. In the Tesla example, a return "
+             "of -0.6 % on average and a median -2.8 % return over the next 5 days was achieved in the selected time "
+             "period after a daily return of 6-7 %. The standard deviation (sd) is calcualted as well."
             )
 c02.dataframe(new_df)
 
-cdf = pd.DataFrame(calc_data, index=['nächster Tag', 'über die nächsten 2 Tage','über die nächsten 3 Tage','über die nächsten 5 Tage','gef. Events','gef. Vorkommnise']).T
+cdf = pd.DataFrame(calc_data, index=['next day', 'over the next 2 days','over the next 3 days','over the next 5 days','Events','Occurrences']).T
 #cdf['Occasions of the selected daily percentage range'] = cdf.index+1
 
 st.write("##")
-c11,a1,c22 = st.columns((1,0.2,1))
+c11,a1,c22 = st.columns((0.1,1,0.1))
+
+a1.markdown("The blue bars in the chart below represent the days (events) where the daily return lies between the "
+             "selected daily percentage range. Thus, in the Tesla example, these fall between 6 and 7 percent. "
+             "The orange bars show the respective return of the selected subsequent time period (next day, over "
+             "the next 2 days, etc.).")
 
 item_list = [col for col in cdf.columns if cdf[col].dtype in ['float64', 'int64']]
-item1 = c11.selectbox('**Charts**', item_list[0:4], index=0)
+item1 = a1.selectbox('**Charts**', item_list[0:4], index=0)
 cdf.index = cdf.index+1
 
-
-c11.write('##')
-c11.write('##')
 def bachat(day):
-    if day == 'über die nächsten 5 Tage':
-        f2 = px.bar(cdf, y=['gef. Vorkommnise',day],title=day, x=cdf.index, template="none")
-        f2.update_xaxes(title="Vorkommnis")
-        f2.update_yaxes(title="return in %")
+    if day == 'over the next 5 days':
+        f2 = px.bar(cdf, y=['Occurrences',day],title=day, x=cdf.index, template="none")
+        f2.update_xaxes(title="Occurrences")
+        f2.update_yaxes(title="Return in %")
         f2.update_layout(plot_bgcolor="white",barmode="group")
         f2.data[0].marker.color = ('lightskyblue')
         f2.data[1].marker.color = ('darkorange')
-        c11.plotly_chart(f2)
+        a1.plotly_chart(f2)
     else:
-        f2 = px.bar(cdf, y=['gef. Events',day], title=day, x=cdf.index, template="none")
-        f2.update_xaxes(title="Vorkommnis")
-        f2.update_yaxes(title="return in %")
+        f2 = px.bar(cdf, y=['Events',day], title=day, x=cdf.index, template="none")
+        f2.update_xaxes(title="Occurrences")
+        f2.update_yaxes(title="Return in %")
         f2.update_layout(plot_bgcolor="white",barmode="group")
         f2.data[0].marker.color = ('lightskyblue')
         f2.data[1].marker.color = ('darkorange')
-        c11.plotly_chart(f2)
+        a1.plotly_chart(f2)
 
 bachat(item1)
 
-
-c22.write('##')
-c22.markdown("Die blauen Balken stehen für die Tage (Events), an denen der Tages-return zwischen "
-             " der ausgewählten daily percentage-range liegt. Die orangen Balken zeigen die jeweilige Rendite"
-             " der ausgewählten nachfolgenden Zeitperiode (nächster Tag, über die nächsten 2 Tage, etc.)"
-             )
-c22.write('##')
-c22.write('##')
-c22.write('##')
-c22.write('##')
-c22.write('##')
-c22.write('##')
-c22.write('##')
-c22.write('##')
-c22.write('##')
-c22.write('##')
-c22.write('##')
-c22.write('##')
-c22.write('##')
-c22.write('##')
-c22.markdown("Wenn das Zeitfenster und die daily percentage-range gross genug ausgewählt werden macht "
-             " es Sinn, nur die Häufigkeits-Verteilung der Renditen anzuschauen. Wenn genug Daten vorhanden sind, sollte sich"
-             " die Verteilung der Renditen an eine Normalverteilung angleichen."
+a1.markdown("If the selected time period and the daily percentage range are wide enough, it "
+            "makes sense to look only at the frequency distribution of the returns. Based on "
+            "the probability theory, the distribution of the returns should converge to a normal "
+            "distribution if enough data is available."
              )
 
-c11.write('##')
-c11.write('##')
-c11.write('##')
-c11.write('##')
-f = px.histogram(cdf[item1], nbins=100, title="Verteilung der Renditen", template="none")
-f.update_xaxes(title="return in %")
-f.update_yaxes(title="Häufigkeit")
+f = px.histogram(cdf[item1], nbins=100, title="Frequency distribution of the returns", template="none")
+f.update_xaxes(title="Return in %")
+f.update_yaxes(title="Frequency")
 f.update_layout(plot_bgcolor = "white")
 f.data[0].marker.color = ('darkorange')
-c11.plotly_chart(f)
+a1.plotly_chart(f)
